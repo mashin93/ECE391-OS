@@ -1,0 +1,94 @@
+Buglog 
+
+Checkpoint 1
+
+#1 - Program restarts over and over again - the gdt was not loaded correctly
+#2 - Keyboard input not being displayed correctly - attempted to read the key from the wrong port
+#3 - Segfault - not specifying the global variable in x86_desc, the gdt descriptor pointer.
+#4 - Keyboard inputs characters with spaces - Was told it would be fine for now
+
+Checkpoint 2
+BUG #1 -- terminal issue
+ISSUE:  
+	Not being able to write the tests for the terminal read function. Always jumps to assert failure because I cannot type in to create a buffer that will be copied to the terminal buffer to be later displayed on the terminal screen.
+SOLUN:
+	I figured that it is an issue with critical section. Since terminal read uses a function that is also used to handle keyboard inputs. I have addded a critical section that prevents interrupts during the printing process, the putc function. Therefore, for the tests to work I need to take out the critical section, but I believe that the read function where it is copying buffer do need to be contained in a critical section.
+
+BUG #2 -- keyboard handling issue
+ISSUE:  
+	When handling keyboard inputs, printing out the buffer results in a infinite loop, keeps spamming the screen. The buffer reprints each time but not at the right location, so the screen is spammed. Also, the characters when pressed, it is being printed twice, the same character. 
+SOLUN:
+	The buffer is resulting in an infinite loop because my own putc function was using a while loop that couldn't	be stopped by comparing with buf_idx, because there is no upper limit on the index. The characters can't be added to the buffer, but the buf_idx always increases. Therefore I tried to change how the printing is done and just integrated/modified the original putc function for the tasks. The character printing twice is resulted from interrupt once when key pressed, another time when key is released.
+
+BUG #3 -- keyboard handling issue
+ISSUE:  
+	Alt and control are not handled correctly after holding down the alt and control still allows typing, where as alt should only be able to backspace and control should only be able to take in backspace and return. Also, enter was not done correctly because after the clear screen, we can no longer press enter anymore.
+SOLUN:
+	Added additional condition to take into account that alt and control only takes in a few specific keys. Added the cases into the keyboard handling function, returns if it is not the few special keys that has been pressed. The enter was fixed because we trolled ourselves. We were debugging, and want to know that enter key was taken in as enter. Therefore our print statements has a \n and we thought we did take the enter case and is giving us new lines. Thus, we took out the print statement and then we handled by using putc('\n').
+		
+BUG #4 - buffer contains gibberish after fread - offset and buffer length not right
+BUG #5 - buffer does not display correctly after dir_read - length not right -> FILENAME_SIZE
+
+Checkpoint 3
+BUG #1 -- filesys functions
+ISSUE:
+    open and other functions do not do what they should
+SOLUN:
+    redo entire filesys so that functions actually work
+
+BUG #2 -- execute
+ISSUE:
+    issues with switching to new process and going back to parent process
+SOLUN:
+    create pid_array and curr_process to more easily keep track of processes and current process
+    
+BUG #3 -- execute
+ISSUE:
+    issues in getting pcb
+SOLUN:
+	create helper functions to get current pcb and pcb from a pid
+    
+BUG #4 -- halt
+ISSUE:
+    not halting properly
+SOLUN:
+	put parent esp and ebp in pcb to make transfer back easier, create a helper function that returns to end of execute
+    
+Checkpoint 4
+BUG #1 -- getargs
+ISSUE:
+    not getting arguments and storing them correctly
+SOLUN:
+    redo execute so that arguments are stored correctly in buffer
+
+BUG #2 -- table
+ISSUE:
+    table not being connected to file type's open, read, write, and close
+SOLUN:
+    forcibly attaching the functions to the tables each depending on file type
+    
+BUG #3 -- pingpong, fish
+ISSUE:
+    pingpong and fish not working
+SOLUN:
+    RTC problem
+    
+BUG #4 -- syscalls
+ISSUE:
+    syscalls number 5 and upper not working
+SOLUN:
+    vidmap, getargs not working properly -- fixed that
+
+Checkpoint 5
+BUG #1 -- scheduling
+ISSUE:
+    trying to get next terminal not working
+SOLUN:
+    change terminal file to get terminal more easily with array of terminals
+
+BUG #2 --terminal
+ISSUE:
+    not being able to exit out of terminal when exiting out of shell
+SOLUN:
+    very hard to do
+	
